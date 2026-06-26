@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>껄무새 · Shoulda — OnlyOne</title>
+<meta name="description" content="그때 살껄, 그때 팔껄. 만약에 그때 샀다면 지금 얼마? 후회 시뮬레이터. / What if you'd bought it back then? The regret simulator by OnlyOne." />
+
+<!-- ============ Google Analytics 4 (Consent Mode v2) ============ -->
+<!-- TODO: OnlyOne GA4 속성의 '껄무새/Shoulda' 데이터 스트림 측정 ID로 교체 -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', {
+    ad_storage:'denied', ad_user_data:'denied',
+    ad_personalization:'denied', analytics_storage:'denied',
+    wait_for_update:500
+  });
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX', { anonymize_ip:true });
+</script>
+<!-- ============================================================== -->
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --ink:#1d1d1f; --muted:#6e6e73; --hairline:rgba(0,0,0,.10);
+  --surface:#ffffff; --bg:#f5f5f7; --brand:#3a3f47;
+  --gain:#1f8f4e; --loss:#d9483b; --gold:#c8a24a;
+  --r:18px; --maxw:680px;
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:var(--sans); color:var(--ink); background:var(--bg);
+  -webkit-font-smoothing:antialiased; line-height:1.5; padding-bottom:env(safe-area-inset-bottom);}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px}
+
+header{position:sticky; top:0; z-index:20; backdrop-filter:saturate(180%) blur(20px);
+  background:rgba(245,245,247,.8); border-bottom:1px solid var(--hairline)}
+.hbar{display:flex; align-items:center; justify-content:space-between; height:52px}
+.brand{display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:var(--brand);
+  font-weight:600; letter-spacing:-.01em; border-radius:999px; padding:6px 10px; transition:background .15s}
+.brand:hover{background:rgba(0,0,0,.05)}
+.brand svg{display:block}
+.lang{font:inherit; font-size:13px; font-weight:600; color:var(--muted); background:none;
+  border:1px solid var(--hairline); border-radius:999px; padding:6px 12px; cursor:pointer; transition:all .15s}
+.lang:hover{color:var(--ink); background:rgba(0,0,0,.04)}
+
+.hero{text-align:center; padding:42px 0 14px}
+.parrot{width:84px; height:84px; margin:0 auto 10px; display:block}
+.hero h1{font-size:34px; line-height:1.1; letter-spacing:-.025em; margin:.1em 0 .15em; font-weight:700}
+.hero .sub{color:var(--muted); font-size:16px; margin:0 auto; max-width:30ch}
+.eyebrow{font-size:12.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--gold)}
+.seedpick{margin:26px auto 0; max-width:420px}
+.seedpick-lab{font-size:13px; color:var(--muted); margin:0 0 10px}
+.seedchips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+.seedchip{font:inherit; font-size:14px; font-weight:600; color:var(--ink); background:var(--surface);
+  border:1px solid var(--hairline); border-radius:999px; padding:9px 15px; cursor:pointer;
+  transition:all .14s; line-height:1}
+.seedchip:hover{border-color:rgba(0,0,0,.22)}
+.seedchip.on{background:var(--ink); color:#fff; border-color:var(--ink)}
+.seedchip .def{font-size:11px; font-weight:500; opacity:.6}
+
+main{padding:6px 0 40px; min-height:60vh}
+.step{animation:rise .4s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+.btn{appearance:none; font:inherit; font-weight:600; border:none; border-radius:999px; cursor:pointer;
+  padding:14px 26px; font-size:16px; transition:transform .12s, background .15s, opacity .15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--ink); color:#fff}
+.btn-primary:hover{background:#000}
+.btn-ghost{background:rgba(0,0,0,.05); color:var(--ink)}
+.btn-ghost:hover{background:rgba(0,0,0,.09)}
+.row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+.crumb{display:flex; align-items:center; gap:8px; justify-content:center; color:var(--muted);
+  font-size:13.5px; margin:6px 0 18px; flex-wrap:wrap}
+.crumb b{color:var(--ink); font-weight:600}
+.crumb .sep{opacity:.4}
+.back{background:none; border:none; color:var(--muted); font:inherit; font-size:14px; cursor:pointer; padding:8px 4px}
+.back:hover{color:var(--ink)}
+.sectitle{font-size:21px; font-weight:700; letter-spacing:-.02em; text-align:center; margin:6px 0 2px}
+.secsub{text-align:center; color:var(--muted); font-size:14px; margin:0 0 20px}
+
+.grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+@media(min-width:520px){.grid{grid-template-columns:repeat(4,1fr)}}
+.card{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r);
+  padding:18px 12px; text-align:center; cursor:pointer; transition:transform .14s, box-shadow .14s, border-color .14s;
+  display:flex; flex-direction:column; align-items:center; gap:8px}
+.card:hover{transform:translateY(-3px); box-shadow:0 10px 28px rgba(0,0,0,.08); border-color:transparent}
+.card .emoji{font-size:30px; line-height:1}
+.card .nm{font-weight:600; font-size:15px; letter-spacing:-.01em}
+.card .meta{font-size:12px; color:var(--muted)}
+
+.list{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+.item{background:var(--surface); border:1px solid var(--hairline); border-radius:14px; padding:14px;
+  cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:10px; text-align:left;
+  transition:transform .12s, box-shadow .12s, border-color .12s}
+.item:hover{transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.07); border-color:transparent}
+.item .nm{font-weight:600; font-size:15px}
+.item .now{font-size:12px; color:var(--muted); margin-top:2px}
+.item .go{color:var(--muted); font-size:18px}
+
+.panel{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r); padding:20px 18px}
+.chart{width:100%; height:140px; display:block; margin:4px 0 2px; overflow:visible}
+.axis{display:flex; justify-content:space-between; color:var(--muted); font-size:11.5px; margin-top:2px}
+.sliderbox{position:relative; height:44px; margin:22px 2px 6px}
+.track{position:absolute; top:50%; left:0; right:0; height:4px; transform:translateY(-50%); background:rgba(0,0,0,.1); border-radius:4px}
+.fill{position:absolute; top:50%; height:4px; transform:translateY(-50%); background:var(--ink); border-radius:4px}
+input[type=range]{-webkit-appearance:none; appearance:none; position:absolute; top:50%; transform:translateY(-50%);
+  width:100%; height:44px; background:none; pointer-events:none; margin:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; pointer-events:auto; width:26px; height:26px;
+  border-radius:50%; background:#fff; border:1px solid var(--hairline); box-shadow:0 2px 8px rgba(0,0,0,.18); cursor:grab}
+input[type=range]::-moz-range-thumb{pointer-events:auto; width:26px; height:26px; border-radius:50%;
+  background:#fff; border:1px solid var(--hairline); box-shadow:0 2px 8px rgba(0,0,0,.18); cursor:grab}
+.thumb-buy::-webkit-slider-thumb{border-color:var(--gain); border-width:3px}
+.thumb-buy::-moz-range-thumb{border-color:var(--gain); border-width:3px}
+.thumb-sell::-webkit-slider-thumb{border-color:var(--loss); border-width:3px}
+.thumb-sell::-moz-range-thumb{border-color:var(--loss); border-width:3px}
+.legs{display:flex; gap:12px; margin-top:6px}
+.leg{flex:1; background:var(--bg); border-radius:14px; padding:12px 14px}
+.leg .lab{font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px}
+.leg .dot{width:8px; height:8px; border-radius:50%}
+.leg .dt{font-weight:700; font-size:17px; letter-spacing:-.01em; margin-top:3px}
+.leg .pr{font-size:12.5px; color:var(--muted); margin-top:1px}
+.seedline{text-align:center; color:var(--muted); font-size:13px; margin:16px 0 4px}
+.seedline b{color:var(--ink)}
+
+.result{background:var(--surface); border:1px solid var(--hairline); border-radius:24px; padding:26px 22px; text-align:center}
+.gradechip{display:inline-flex; align-items:center; justify-content:center; width:84px; height:84px; border-radius:50%;
+  font-size:42px; font-weight:800; color:#fff; margin:0 auto 8px; letter-spacing:-.02em}
+.rtitle{font-size:18px; font-weight:700; margin:6px 0 2px}
+.rnum{font-size:40px; font-weight:800; letter-spacing:-.03em; line-height:1.05; margin:8px 0 2px}
+.rbal{color:var(--muted); font-size:14px}
+.rdesc{color:var(--ink); font-size:15px; margin:14px auto 0; max-width:34ch}
+.rsquawk{color:var(--muted); font-size:13.5px; margin-top:8px; font-style:italic}
+.tag{display:inline-block; font-size:12px; color:var(--muted); margin-top:14px}
+
+footer{border-top:1px solid var(--hairline); padding:22px 0 36px; color:var(--muted); font-size:12.5px; text-align:center}
+footer a{color:var(--muted)}
+.privacy{max-width:46ch; margin:0 auto 10px; line-height:1.6}
+.flink{cursor:pointer; text-decoration:underline; text-underline-offset:2px}
+
+.consent{position:fixed; left:12px; right:12px; bottom:12px; z-index:50; max-width:var(--maxw); margin:0 auto;
+  background:var(--surface); border:1px solid var(--hairline); border-radius:16px; box-shadow:0 12px 40px rgba(0,0,0,.16);
+  padding:16px; display:none; gap:12px; align-items:center; flex-wrap:wrap}
+.consent.show{display:flex}
+.consent p{margin:0; flex:1 1 240px; font-size:13px; color:var(--muted); line-height:1.5}
+.consent .row{justify-content:flex-end; gap:8px; flex:0 0 auto}
+.consent .btn{padding:9px 16px; font-size:13.5px}
+
+.modal{position:fixed; inset:0; z-index:60; background:rgba(0,0,0,.4); display:none; align-items:center; justify-content:center; padding:18px}
+.modal.show{display:flex}
+.sheet{background:#fff; border-radius:18px; max-width:520px; width:100%; max-height:80vh; overflow:auto; padding:24px}
+.sheet h3{margin:0 0 10px; font-size:18px}
+.sheet p{font-size:14px; color:var(--muted); line-height:1.6}
+.sheet .x{float:right; border:none; background:none; font-size:20px; cursor:pointer; color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important; transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap hbar">
+    <a class="brand" href="https://main.onlyonecorpceo.workers.dev/" target="_blank" rel="noopener" id="brandLink" aria-label="OnlyOne">
+      <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="22" r="13" fill="none" stroke="currentColor" stroke-width="7"/>
+        <rect x="28.5" y="35" width="7" height="18" rx="3.5" fill="currentColor"/>
+      </svg>
+      <span>OnlyOne</span>
+    </a>
+    <button class="lang" id="langBtn" aria-label="Language">EN</button>
+  </div>
+</header>
+
+<main class="wrap" id="app"></main>
+
+<footer class="wrap">
+  <p class="privacy" id="privacyNote"></p>
+  <p><span class="flink" id="openPrivacy"></span> · <a href="mailto:onlyonecorpceo@gmail.com">onlyonecorpceo@gmail.com</a></p>
+  <p>© 2026 OnlyOne · <span id="tagline"></span></p>
+</footer>
+
+<div class="consent" id="consent">
+  <p id="consentText"></p>
+  <div class="row">
+    <button class="btn btn-ghost" id="declineBtn"></button>
+    <button class="btn btn-primary" id="acceptBtn"></button>
+  </div>
+</div>
+
+<div class="modal" id="privacyModal">
+  <div class="sheet">
+    <button class="x" id="closePrivacy">×</button>
+    <h3 id="pmTitle"></h3>
+    <p id="pmBody"></p>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   껄무새 · Shoulda — OnlyOne
+   ── 가격 데이터는 아래 DATA 블록 한 곳에만 있습니다 ──
+   갱신: 각 item.series 에 [날짜, 가격] 쌍을 추가/수정하세요.
+     · 날짜: "YYYY" 또는 "YYYY.MM" (슬라이더 라벨에 그대로 표시)
+     · 가격: 숫자 (item.cur 통화, 단위는 item.unit)
+     · series 는 시간 오름차순 정렬
+   수익은 (매도가/매수가) 배율로 계산 → 통화·단위 크기가 달라도 무방.
+   item.source 에 가격 출처를 간단히 적어두면 갱신 시 참고됩니다.
+   ===================================================================== */
+
+const DATA = {
+  minerals: { name:{ko:"광물",en:"Minerals"}, emoji:"⛏️", items:[
+    {id:"gold",   name:{ko:"금",en:"Gold"}, cur:"USD", unit:{ko:"/oz",en:"/oz"}, source:"LBMA / goldprice.org",
+     series:[["2000",280],["2005",445],["2008",870],["2011",1570],["2015",1160],["2019",1390],["2020",1770],["2022",1800],["2024",2390],["2025.10",4250],["2026.06",4000]]},
+    {id:"silver", name:{ko:"은",en:"Silver"}, cur:"USD", unit:{ko:"/oz",en:"/oz"}, source:"LBMA / silverprice.org",
+     series:[["2000",5.0],["2008",15],["2011",35],["2015",15.7],["2020",20.5],["2022",21.8],["2024",29],["2025.10",52],["2026.06",62]]},
+    {id:"copper", name:{ko:"구리",en:"Copper"}, cur:"USD", unit:{ko:"/lb",en:"/lb"}, source:"LME / tradingeconomics",
+     series:[["2000",0.82],["2008",3.1],["2011",4.0],["2016",2.1],["2020",2.8],["2022",4.4],["2024",4.2],["2026.06",4.6]]},
+    {id:"lithium",name:{ko:"리튬",en:"Lithium"}, cur:"USD", unit:{ko:"/t",en:"/t"}, source:"Benchmark / tradingeconomics (탄산리튬)",
+     series:[["2018",16500],["2020",6000],["2021",30000],["2022",70000],["2023",40000],["2024",13000],["2026.06",11000]]},
+    {id:"platinum",name:{ko:"백금",en:"Platinum"}, cur:"USD", unit:{ko:"/oz",en:"/oz"}, source:"goldprice.org",
+     series:[["2000",550],["2008",1550],["2011",1750],["2015",1050],["2020",870],["2022",980],["2024",950],["2026.06",1080]]},
+    {id:"palladium",name:{ko:"팔라듐",en:"Palladium"}, cur:"USD", unit:{ko:"/oz",en:"/oz"}, source:"goldprice.org",
+     series:[["2008",185],["2011",730],["2016",560],["2020",2350],["2022",2100],["2024",950],["2026.06",1050]]},
+    {id:"nickel", name:{ko:"니켈",en:"Nickel"}, cur:"USD", unit:{ko:"/t",en:"/t"}, source:"LME / tradingeconomics",
+     series:[["2005",14500],["2011",22000],["2016",9000],["2020",13800],["2022",30000],["2024",16500],["2026.06",15500]]},
+    {id:"uranium",name:{ko:"우라늄",en:"Uranium"}, cur:"USD", unit:{ko:"/lb",en:"/lb"}, source:"tradingeconomics (U3O8)",
+     series:[["2003",11],["2007",136],["2011",55],["2016",18],["2020",30],["2023",58],["2024",100],["2026.06",78]]},
+    {id:"cobalt", name:{ko:"코발트",en:"Cobalt"}, cur:"USD", unit:{ko:"/t",en:"/t"}, source:"LME / tradingeconomics",
+     series:[["2016",24000],["2018",90000],["2020",33000],["2022",70000],["2024",27000],["2026.06",33000]]},
+    {id:"zinc",   name:{ko:"아연",en:"Zinc"}, cur:"USD", unit:{ko:"/t",en:"/t"}, source:"LME / tradingeconomics",
+     series:[["2005",1900],["2007",3500],["2016",2100],["2020",2750],["2022",3500],["2024",2800],["2026.06",3000]]}
+  ]},
+  stocks: { name:{ko:"주식",en:"Stocks"}, emoji:"📈", items:[
+    {id:"samsung", name:{ko:"삼성전자",en:"Samsung Elec."}, cur:"KRW", unit:{ko:"원",en:"KRW"}, source:"KRX / 네이버증권",
+     series:[["2000",6000],["2008",12000],["2013",30000],["2017",50000],["2020",55000],["2021",80000],["2023",70000],["2024",53000],["2026.06",78000]]},
+    {id:"apple",   name:{ko:"애플",en:"Apple"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"Yahoo Finance AAPL (분할조정)",
+     series:[["2005",2.0],["2010",9.0],["2015",27],["2019",73],["2021",177],["2023",193],["2024",228],["2026.06",240]]},
+    {id:"nvidia",  name:{ko:"엔비디아",en:"Nvidia"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"Yahoo Finance NVDA (10:1 분할조정)",
+     series:[["2015",0.7],["2018",3.5],["2020",13],["2022",15],["2023",49],["2024",135],["2025",175],["2026.05",235],["2026.06",200]]},
+    {id:"tesla",   name:{ko:"테슬라",en:"Tesla"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"Yahoo Finance TSLA (분할조정)",
+     series:[["2013",10],["2016",14],["2019",17],["2020",235],["2021",352],["2023",250],["2024",410],["2026.06",330]]},
+    {id:"amazon",  name:{ko:"아마존",en:"Amazon"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"Yahoo Finance AMZN (분할조정)",
+     series:[["2005",2.2],["2010",9],["2015",34],["2018",75],["2021",170],["2023",150],["2024",220],["2026.06",235]]},
+    {id:"microsoft",name:{ko:"마이크로소프트",en:"Microsoft"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"Yahoo Finance MSFT",
+     series:[["2000",58],["2009",24],["2015",55],["2019",157],["2021",336],["2023",376],["2025",450],["2026.06",365]]},
+    {id:"alphabet",name:{ko:"알파벳(구글)",en:"Alphabet"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"Yahoo Finance GOOGL (분할조정)",
+     series:[["2005",10],["2010",15],["2015",38],["2019",67],["2021",145],["2023",140],["2024",190],["2026.06",205]]},
+    {id:"meta",    name:{ko:"메타(페이스북)",en:"Meta"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"Yahoo Finance META",
+     series:[["2012",38],["2015",105],["2018",175],["2021",340],["2022",120],["2023",350],["2024",600],["2026.06",680]]},
+    {id:"netflix", name:{ko:"넷플릭스",en:"Netflix"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"Yahoo Finance NFLX (분할조정)",
+     series:[["2007",3.2],["2012",13],["2015",114],["2018",267],["2021",610],["2022",195],["2024",700],["2026.06",1100]]},
+    {id:"kakao",   name:{ko:"카카오",en:"Kakao"}, cur:"KRW", unit:{ko:"원",en:"KRW"}, source:"KRX / 네이버증권 (분할조정)",
+     series:[["2017",28000],["2020",39000],["2021",169000],["2022",55000],["2023",58000],["2024",38000],["2026.06",42000]]}
+  ]},
+  crypto: { name:{ko:"암호화폐",en:"Crypto"}, emoji:"🪙", items:[
+    {id:"bitcoin", name:{ko:"비트코인",en:"Bitcoin"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"CoinGecko / Yahoo BTC-USD",
+     series:[["2013",130],["2015",315],["2017",13000],["2018",3800],["2020",9000],["2021",47000],["2023",27000],["2024",95000],["2025.10",126000],["2026.06",62000]]},
+    {id:"ethereum",name:{ko:"이더리움",en:"Ethereum"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"CoinGecko / Yahoo ETH-USD",
+     series:[["2016",10],["2017",730],["2018",140],["2020",230],["2021",3700],["2023",1900],["2024",3400],["2025.08",4950],["2026.06",1670]]},
+    {id:"ripple",  name:{ko:"리플(XRP)",en:"XRP"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"CoinGecko XRP",
+     series:[["2015",0.006],["2017",0.25],["2018",2.0],["2020",0.22],["2021",0.6],["2024",0.6],["2025",2.4],["2026.06",1.05]]},
+    {id:"dogecoin",name:{ko:"도지코인",en:"Dogecoin"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"CoinGecko DOGE",
+     series:[["2017",0.0005],["2019",0.002],["2021",0.45],["2022",0.07],["2024",0.16],["2025",0.38],["2026.06",0.14]]},
+    {id:"solana",  name:{ko:"솔라나",en:"Solana"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"CoinGecko SOL",
+     series:[["2020",1.0],["2021",240],["2022",10],["2023",100],["2024",190],["2025",260],["2026.06",66]]},
+    {id:"cardano", name:{ko:"카르다노",en:"Cardano"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"CoinGecko ADA",
+     series:[["2018",0.03],["2021",2.9],["2022",0.3],["2024",0.6],["2025",1.0],["2026.06",0.5]]},
+    {id:"bnb",     name:{ko:"바이낸스코인",en:"BNB"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"CoinGecko BNB",
+     series:[["2017",1.5],["2019",30],["2021",520],["2023",250],["2024",600],["2025",700],["2026.06",550]]},
+    {id:"litecoin",name:{ko:"라이트코인",en:"Litecoin"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"CoinGecko LTC",
+     series:[["2013",4],["2017",230],["2019",30],["2021",180],["2023",90],["2025",120],["2026.06",80]]},
+    {id:"tron",    name:{ko:"트론",en:"TRON"}, cur:"USD", unit:{ko:"$",en:"$"}, source:"CoinGecko TRX",
+     series:[["2018",0.18],["2020",0.02],["2021",0.1],["2023",0.1],["2025",0.28],["2026.06",0.33]]},
+    {id:"shiba",   name:{ko:"시바이누",en:"Shiba Inu"}, cur:"USD", unit:{ko:"$ (×10⁻⁸)",en:"$ (×10⁻⁸)"}, source:"CoinGecko SHIB (1e-8 단위)",
+     series:[["2021.01",0.07],["2021.10",8.0],["2022",1.1],["2024",2.5],["2025",1.3],["2026.06",0.9]]}
+  ]},
+  wine: { name:{ko:"와인",en:"Wine"}, emoji:"🍷", items:[
+    {id:"lafite",     name:{ko:"샤토 라피트 로칠드",en:"Ch. Lafite Rothschild"}, cur:"USD", unit:{ko:"/병",en:"/btl"}, source:"Liv-ex / Wine-Searcher (빈티지 평균)",
+     series:[["2005",350],["2010",1200],["2012",700],["2016",650],["2020",850],["2022",950],["2024",780],["2026.06",760]]},
+    {id:"romaneeconti",name:{ko:"로마네 콩티 (DRC)",en:"Romanée-Conti"}, cur:"USD", unit:{ko:"/병",en:"/btl"}, source:"Wine-Searcher 평균",
+     series:[["2005",4000],["2010",9000],["2015",13000],["2020",19000],["2022",24000],["2024",21000],["2026.06",20000]]},
+    {id:"petrus",     name:{ko:"페트뤼스",en:"Pétrus"}, cur:"USD", unit:{ko:"/병",en:"/btl"}, source:"Wine-Searcher 평균",
+     series:[["2008",1800],["2012",3200],["2016",2800],["2020",3600],["2022",4200],["2024",3800],["2026.06",3700]]},
+    {id:"domperignon",name:{ko:"돔 페리뇽",en:"Dom Pérignon"}, cur:"USD", unit:{ko:"/병",en:"/btl"}, source:"Wine-Searcher 평균",
+     series:[["2008",120],["2014",150],["2018",180],["2021",230],["2024",210],["2026.06",215]]},
+    {id:"screamingeagle",name:{ko:"스크리밍 이글",en:"Screaming Eagle"}, cur:"USD", unit:{ko:"/병",en:"/btl"}, source:"Wine-Searcher 평균",
+     series:[["2008",1500],["2013",2500],["2018",3200],["2021",3800],["2024",3500],["2026.06",3400]]},
+    {id:"grange",     name:{ko:"펜폴즈 그랜지",en:"Penfolds Grange"}, cur:"USD", unit:{ko:"/병",en:"/btl"}, source:"Wine-Searcher 평균",
+     series:[["2008",350],["2014",550],["2018",700],["2021",850],["2024",780],["2026.06",760]]},
+    {id:"sassicaia",  name:{ko:"사시카이아",en:"Sassicaia"}, cur:"USD", unit:{ko:"/병",en:"/btl"}, source:"Wine-Searcher 평균",
+     series:[["2008",120],["2014",180],["2018",230],["2021",300],["2024",270],["2026.06",265]]},
+    {id:"opusone",    name:{ko:"오퍼스 원",en:"Opus One"}, cur:"USD", unit:{ko:"/병",en:"/btl"}, source:"Wine-Searcher 평균",
+     series:[["2008",180],["2014",250],["2018",320],["2021",400],["2024",360],["2026.06",350]]},
+    {id:"mouton",     name:{ko:"샤토 무통 로칠드",en:"Ch. Mouton Rothschild"}, cur:"USD", unit:{ko:"/병",en:"/btl"}, source:"Wine-Searcher 평균",
+     series:[["2008",350],["2013",600],["2018",650],["2021",750],["2024",680],["2026.06",660]]},
+    {id:"margaux",    name:{ko:"샤토 마고",en:"Ch. Margaux"}, cur:"USD", unit:{ko:"/병",en:"/btl"}, source:"Wine-Searcher 평균",
+     series:[["2008",400],["2013",650],["2018",700],["2021",800],["2024",720],["2026.06",700]]}
+  ]},
+  realestate: { name:{ko:"부동산",en:"Real Estate"}, emoji:"🏠", items:[
+    {id:"gangnam", name:{ko:"강남 아파트",en:"Gangnam Apt (Seoul)"}, cur:"KRW", unit:{ko:"만원/3.3㎡",en:"10k₩/py"}, source:"KB부동산 / 부동산원 (평당)",
+     series:[["2008",2500],["2013",2800],["2016",3500],["2018",5000],["2020",6500],["2022",8500],["2024",7800],["2026.06",9000]]},
+    {id:"seoulavg",name:{ko:"서울 아파트 평균",en:"Seoul Apt (avg)"}, cur:"KRW", unit:{ko:"만원/3.3㎡",en:"10k₩/py"}, source:"KB부동산 (평당)",
+     series:[["2008",1700],["2013",1600],["2016",1900],["2018",2400],["2020",3100],["2022",4300],["2024",3900],["2026.06",4400]]},
+    {id:"jeju",    name:{ko:"제주 토지",en:"Jeju Land"}, cur:"KRW", unit:{ko:"만원/3.3㎡",en:"10k₩/py"}, source:"부동산원 지가지수 (개략)",
+     series:[["2010",30],["2014",50],["2016",110],["2018",95],["2021",120],["2024",105],["2026.06",100]]},
+    {id:"busan",   name:{ko:"부산 아파트",en:"Busan Apt"}, cur:"KRW", unit:{ko:"만원/3.3㎡",en:"10k₩/py"}, source:"KB부동산 (평당)",
+     series:[["2010",800],["2015",1000],["2018",1100],["2021",1700],["2023",1500],["2026.06",1600]]},
+    {id:"manhattan",name:{ko:"맨해튼 (뉴욕)",en:"Manhattan NYC"}, cur:"USD", unit:{ko:"$/sqft",en:"$/sqft"}, source:"StreetEasy / Zillow (중위)",
+     series:[["2008",1100],["2013",1300],["2016",1700],["2019",1500],["2021",1450],["2024",1550],["2026.06",1620]]},
+    {id:"tokyo",   name:{ko:"도쿄 맨션",en:"Tokyo Condo"}, cur:"JPY", unit:{ko:"만엔/㎡",en:"10k¥/㎡"}, source:"REINS / 도쿄칸테이 (개략)",
+     series:[["2010",55],["2015",70],["2018",85],["2021",95],["2024",120],["2026.06",135]]},
+    {id:"london",  name:{ko:"런던 주택",en:"London Home"}, cur:"GBP", unit:{ko:"£/sqft",en:"£/sqft"}, source:"Rightmove / Land Registry (개략)",
+     series:[["2008",450],["2013",550],["2016",750],["2019",700],["2022",730],["2024",720],["2026.06",740]]},
+    {id:"hongkong",name:{ko:"홍콩 주택",en:"Hong Kong Home"}, cur:"HKD", unit:{ko:"HK$/sqft",en:"HK$/sqft"}, source:"Centaline CCL (개략)",
+     series:[["2008",6000],["2013",10000],["2018",17000],["2021",18500],["2023",14000],["2026.06",12500]]},
+    {id:"singapore",name:{ko:"싱가포르 콘도",en:"Singapore Condo"}, cur:"SGD", unit:{ko:"S$/sqft",en:"S$/sqft"}, source:"URA PPI (개략)",
+     series:[["2010",1100],["2014",1350],["2018",1450],["2021",1700],["2024",2100],["2026.06",2250]]},
+    {id:"dubai",   name:{ko:"두바이 아파트",en:"Dubai Apt"}, cur:"AED", unit:{ko:"AED/sqft",en:"AED/sqft"}, source:"DLD / Property Monitor (개략)",
+     series:[["2014",1300],["2018",1000],["2020",900],["2022",1300],["2024",1600],["2026.06",1750]]}
+  ]},
+  commodities: { name:{ko:"원자재",en:"Commodities"}, emoji:"🛢️", items:[
+    {id:"wti",    name:{ko:"WTI 원유",en:"WTI Crude Oil"}, cur:"USD", unit:{ko:"/bbl",en:"/bbl"}, source:"EIA / tradingeconomics",
+     series:[["2000",27],["2008",100],["2009",62],["2014",93],["2016",43],["2020",39],["2022",95],["2024",78],["2026.06",72]]},
+    {id:"natgas", name:{ko:"천연가스",en:"Natural Gas"}, cur:"USD", unit:{ko:"/MMBtu",en:"/MMBtu"}, source:"Henry Hub / EIA",
+     series:[["2005",8.8],["2012",2.8],["2016",2.5],["2020",2.0],["2022",6.4],["2024",2.4],["2026.06",3.4]]},
+    {id:"wheat",  name:{ko:"밀",en:"Wheat"}, cur:"USD", unit:{ko:"/bu",en:"/bu"}, source:"CBOT / tradingeconomics",
+     series:[["2005",3.2],["2008",9.0],["2016",4.0],["2020",5.5],["2022",11],["2024",6.0],["2026.06",5.6]]},
+    {id:"corn",   name:{ko:"옥수수",en:"Corn"}, cur:"USD", unit:{ko:"/bu",en:"/bu"}, source:"CBOT / tradingeconomics",
+     series:[["2005",2.0],["2012",7.5],["2016",3.4],["2020",3.5],["2022",7.5],["2024",4.3],["2026.06",4.5]]},
+    {id:"coffee", name:{ko:"커피(아라비카)",en:"Coffee (Arabica)"}, cur:"USD", unit:{ko:"/lb",en:"/lb"}, source:"ICE / tradingeconomics",
+     series:[["2005",1.0],["2011",2.6],["2016",1.3],["2020",1.1],["2022",2.3],["2024",3.2],["2025",4.0],["2026.06",3.4]]},
+    {id:"sugar",  name:{ko:"설탕",en:"Sugar"}, cur:"USD", unit:{ko:"/lb",en:"/lb"}, source:"ICE / tradingeconomics",
+     series:[["2005",0.09],["2011",0.27],["2018",0.12],["2020",0.13],["2023",0.27],["2026.06",0.18]]},
+    {id:"cocoa",  name:{ko:"코코아",en:"Cocoa"}, cur:"USD", unit:{ko:"/t",en:"/t"}, source:"ICE / tradingeconomics",
+     series:[["2005",1500],["2011",3000],["2016",3000],["2020",2400],["2023",4200],["2024",10000],["2026.06",7000]]},
+    {id:"soybean",name:{ko:"대두",en:"Soybean"}, cur:"USD", unit:{ko:"/bu",en:"/bu"}, source:"CBOT / tradingeconomics",
+     series:[["2005",6],["2012",17],["2016",9.5],["2020",9],["2022",16],["2024",10.5],["2026.06",10.8]]},
+    {id:"cotton", name:{ko:"면화",en:"Cotton"}, cur:"USD", unit:{ko:"/lb",en:"/lb"}, source:"ICE / tradingeconomics",
+     series:[["2005",0.5],["2011",1.5],["2016",0.65],["2020",0.6],["2022",1.1],["2024",0.72],["2026.06",0.7]]},
+    {id:"oj",     name:{ko:"오렌지주스",en:"Orange Juice"}, cur:"USD", unit:{ko:"/lb",en:"/lb"}, source:"ICE / tradingeconomics",
+     series:[["2010",1.4],["2016",1.4],["2020",1.2],["2022",1.8],["2024",4.2],["2026.06",3.2]]}
+  ]},
+  collectibles: { name:{ko:"수집품",en:"Collectibles"}, emoji:"🎴", items:[
+    {id:"daytona",  name:{ko:"롤렉스 데이토나",en:"Rolex Daytona"}, cur:"USD", unit:{ko:"/개",en:"/ea"}, source:"Chrono24 (스틸, 2차시장 평균)",
+     series:[["2008",12000],["2014",18000],["2018",25000],["2021",40000],["2022",55000],["2024",32000],["2026.06",30000]]},
+    {id:"charizard",name:{ko:"포켓몬 리자몽 1판",en:"Charizard 1st Ed."}, cur:"USD", unit:{ko:"PSA10",en:"PSA10"}, source:"PWCC / eBay 낙찰가 (개략)",
+     series:[["2016",6000],["2019",20000],["2021",350000],["2022",250000],["2024",300000],["2026.06",280000]]},
+    {id:"jordan1",  name:{ko:"에어 조던1 시카고(85)",en:"Air Jordan 1 Chicago '85"}, cur:"USD", unit:{ko:"디스톡",en:"resell"}, source:"StockX / Goat (개략)",
+     series:[["2015",3000],["2018",7000],["2021",14000],["2023",10000],["2026.06",9000]]},
+    {id:"falcon",   name:{ko:"레고 UCS 밀레니엄 팔콘",en:"LEGO UCS Falcon"}, cur:"USD", unit:{ko:"미개봉",en:"sealed"}, source:"BrickEconomy (개략)",
+     series:[["2017",800],["2019",1200],["2021",1100],["2023",950],["2026.06",1000]]},
+    {id:"nautilus", name:{ko:"파텍필립 노틸러스 5711",en:"Patek Nautilus 5711"}, cur:"USD", unit:{ko:"/개",en:"/ea"}, source:"Chrono24 (개략)",
+     series:[["2012",30000],["2018",60000],["2021",150000],["2022",100000],["2024",80000],["2026.06",75000]]},
+    {id:"supreme",  name:{ko:"슈프림 박스로고 후디",en:"Supreme Box Logo Hoodie"}, cur:"USD", unit:{ko:"디스톡",en:"resell"}, source:"StockX / Grailed (개략)",
+     series:[["2016",400],["2018",900],["2020",1100],["2022",700],["2026.06",650]]},
+    {id:"labubu",   name:{ko:"라부부 (시크릿)",en:"Labubu (secret)"}, cur:"USD", unit:{ko:"/개",en:"/ea"}, source:"2차시장 (Pop Mart, 개략)",
+     series:[["2019",40],["2022",120],["2024",300],["2025",900],["2026.06",500]]},
+    {id:"basquiat", name:{ko:"바스키아 작품 지수",en:"Basquiat Art Index"}, cur:"USD", unit:{ko:"지수",en:"index"}, source:"Artprice / 경매 (개략 지수)",
+     series:[["2008",100],["2013",250],["2017",600],["2021",900],["2024",820],["2026.06",850]]},
+    {id:"porsche911",name:{ko:"포르쉐 911 (993)",en:"Porsche 911 (993)"}, cur:"USD", unit:{ko:"/대",en:"/car"}, source:"Bring a Trailer (개략)",
+     series:[["2010",30000],["2015",60000],["2019",90000],["2022",130000],["2024",110000],["2026.06",105000]]},
+    {id:"jordancard",name:{ko:"마이클 조던 루키카드",en:"Jordan Rookie Card"}, cur:"USD", unit:{ko:"PSA10",en:"PSA10"}, source:"PWCC / 경매 (개략)",
+     series:[["2010",10000],["2016",25000],["2020",90000],["2021",250000],["2024",200000],["2026.06",190000]]}
+  ]},
+  luxury: { name:{ko:"명품",en:"Luxury"}, emoji:"👜", items:[
+    {id:"birkin",    name:{ko:"에르메스 버킨 25",en:"Hermès Birkin 25"}, cur:"USD", unit:{ko:"리테일",en:"retail"}, source:"Hermès 정가 인상 추이 (개략)",
+     series:[["2010",7000],["2015",9000],["2019",10500],["2022",11500],["2024",12500],["2026.06",13500]]},
+    {id:"chanelflap",name:{ko:"샤넬 클래식 플랩 미듐",en:"Chanel Classic Flap M"}, cur:"USD", unit:{ko:"리테일",en:"retail"}, source:"Chanel 정가 인상 추이 (개략)",
+     series:[["2010",3000],["2015",4900],["2019",5800],["2021",8800],["2023",10200],["2026.06",10800]]},
+    {id:"submariner",name:{ko:"롤렉스 서브마리너",en:"Rolex Submariner"}, cur:"USD", unit:{ko:"리테일",en:"retail"}, source:"Rolex 정가 추이 (개략)",
+     series:[["2010",7000],["2016",8500],["2020",9000],["2024",10000],["2026.06",10500]]},
+    {id:"kelly",     name:{ko:"에르메스 켈리 28",en:"Hermès Kelly 28"}, cur:"USD", unit:{ko:"리테일",en:"retail"}, source:"Hermès 정가 추이 (개략)",
+     series:[["2012",7500],["2016",9000],["2020",10000],["2023",11000],["2026.06",12500]]},
+    {id:"speedy",    name:{ko:"루이비통 스피디 30",en:"LV Speedy 30"}, cur:"USD", unit:{ko:"리테일",en:"retail"}, source:"LV 정가 추이 (개략)",
+     series:[["2010",700],["2015",970],["2019",1100],["2022",1300],["2024",1450],["2026.06",1550]]},
+    {id:"saddle",    name:{ko:"디올 새들백",en:"Dior Saddle Bag"}, cur:"USD", unit:{ko:"리테일",en:"retail"}, source:"Dior 정가 추이 (개략)",
+     series:[["2018",3000],["2020",3500],["2022",3900],["2024",4200],["2026.06",4500]]},
+    {id:"cartierlove",name:{ko:"까르띠에 러브 브레이슬릿",en:"Cartier Love Bracelet"}, cur:"USD", unit:{ko:"리테일",en:"retail"}, source:"Cartier 정가 추이 (개략)",
+     series:[["2010",4000],["2015",6300],["2019",6800],["2022",7350],["2024",8000],["2026.06",8500]]},
+    {id:"royaloak",  name:{ko:"오데마피게 로열오크",en:"AP Royal Oak"}, cur:"USD", unit:{ko:"리테일",en:"retail"}, source:"AP 정가 추이 (개략)",
+     series:[["2012",18000],["2016",21000],["2020",26000],["2024",35000],["2026.06",38000]]},
+    {id:"goyard",    name:{ko:"고야드 생루이 토트",en:"Goyard St. Louis Tote"}, cur:"USD", unit:{ko:"리테일",en:"retail"}, source:"Goyard 정가 추이 (개략)",
+     series:[["2014",1100],["2018",1400],["2021",1600],["2024",1900],["2026.06",2100]]},
+    {id:"guccimar",  name:{ko:"구찌 마몬트",en:"Gucci Marmont"}, cur:"USD", unit:{ko:"리테일",en:"retail"}, source:"Gucci 정가 추이 (개략)",
+     series:[["2016",1800],["2019",2200],["2022",2500],["2024",2700],["2026.06",2900]]}
+  ]}
+};
+
+/* ===== i18n ===== */
+const I = {
+  ko:{ langBtn:"EN", heroTitle:"껄무새", heroSub:"그때 살껄, 그때 팔껄… 만약 그때 샀다면 지금 얼마?",
+    start:"시작하기", pickCat:"무엇에 투자할 걸 그랬나", pickCatSub:"카테고리를 골라보세요",
+    pickItem:"어떤 걸 살 걸 그랬나", pickItemSub:"품목을 고르면 매수·매도 시점을 정해요",
+    timingTitle:"언제 사고 언제 팔 걸 그랬나", timingSub:"바를 드래그해 매수·매도 시점을 정하세요",
+    buy:"매수", sell:"매도", seed:"시드머니", seedPick:"시드머니를 정하세요", seeResult:"결과 보기", back:"뒤로",
+    now:"현재", finalBal:"최종 잔고", round:"라운드",
+    high:"최고", low:"최저", priceChart:"가격 추이",
+    reinvest:"이 돈으로 또 투자", again:"다음 생에 다시", restart:"처음부터",
+    save:"이미지 저장", share:"공유하기", privacyLink:"개인정보 처리방침", tagline:"For a Happy Day",
+    privacyNote:"이 사이트는 방문 통계를 위해 Google Analytics를 사용합니다. 동의 시에만 측정 쿠키가 저장돼요.",
+    consentText:"방문 통계를 위해 Google Analytics 쿠키를 사용해도 될까요? 거부해도 사이트는 그대로 이용할 수 있어요.",
+    accept:"동의", decline:"거부", pmTitle:"개인정보 처리방침",
+    pmBody:"껄무새(Shoulda)는 OnlyOne이 운영하는 재미용 시뮬레이터입니다. 입력하신 선택값은 브라우저 안에서만 계산되며 서버로 전송되지 않습니다. 방문 통계 분석을 위해 Google Analytics 4를 사용하며, 이는 동의하신 경우에만 쿠키를 저장합니다. 수집 항목은 익명화된 방문/이벤트 데이터로 한정됩니다. 문의: onlyonecorpceo@gmail.com",
+    disclaimer:"※ 가격은 실제 추이를 참고한 근사치이며 투자 권유가 아닙니다.", source:"출처",
+    shareText:(g,r)=>`껄무새 결과: ${g}등급, 수익률 ${r}! 나도 그때 살껄… OnlyOne`, copied:"결과 문구를 복사했어요" },
+  en:{ langBtn:"한국어", heroTitle:"Shoulda", heroSub:"I shoulda bought it. I shoulda sold it. What if you actually had?",
+    start:"Start", pickCat:"What you shoulda invested in", pickCatSub:"Pick a category",
+    pickItem:"What you shoulda bought", pickItemSub:"Pick one, then set your buy & sell timing",
+    timingTitle:"When you shoulda bought & sold", timingSub:"Drag the handles to set buy and sell points",
+    buy:"Buy", sell:"Sell", seed:"Seed money", seedPick:"Choose your seed money", seeResult:"See result", back:"Back",
+    now:"Now", finalBal:"Final balance", round:"Round",
+    high:"High", low:"Low", priceChart:"Price history",
+    reinvest:"Reinvest it all", again:"Try again, next life", restart:"Start over",
+    save:"Save image", share:"Share", privacyLink:"Privacy policy", tagline:"For a Happy Day",
+    privacyNote:"This site uses Google Analytics for visit stats. Measurement cookies are stored only if you consent.",
+    consentText:"May we use Google Analytics cookies for visit stats? You can decline and still use everything.",
+    accept:"Accept", decline:"Decline", pmTitle:"Privacy policy",
+    pmBody:"Shoulda is a for-fun simulator by OnlyOne. Your choices are computed entirely in your browser and never sent to a server. We use Google Analytics 4 for visit analytics, which stores cookies only with your consent, limited to anonymized visit/event data. Contact: onlyonecorpceo@gmail.com",
+    disclaimer:"※ Prices are approximations based on real trends. Not investment advice.", source:"Source",
+    shareText:(g,r)=>`My Shoulda grade: ${g}, return ${r}! I totally shoulda… OnlyOne`, copied:"Result text copied" }
+};
+
+/* ===== grade config (수익률 % 기준) ===== */
+const GRADES = [
+  {g:"S", min:300, color:"#c8a24a",
+   ko:{t:"갓물주 인증", d:"이건 살껄이 아니라 진짜 샀어야 했다. 인생 한 방.", sq:"\"샀어야 했는데… 샀어야 했는데…\" 🦜"},
+   en:{t:"Legendary", d:"Not a 'shoulda' — you absolutely should have. Life-changing.", sq:"\"Shoulda… shoulda… SHOULDA!\" 🦜"}},
+  {g:"A", min:100, color:"#1f8f4e",
+   ko:{t:"인생 역전", d:"원금의 두 배 이상. 껄무새도 박수 친다.", sq:"\"역시 살껄이 정답이었어!\" 🦜"},
+   en:{t:"Big win", d:"More than doubled your money. Even the parrot claps.", sq:"\"Knew you shoulda!\" 🦜"}},
+  {g:"B", min:30, color:"#2f6f8f",
+   ko:{t:"꽤 잘했다", d:"이 정도면 자랑해도 된다. 치킨이 아니라 한우.", sq:"\"이건 좀 살껄 했네.\" 🦜"},
+   en:{t:"Solid", d:"Worth bragging about. Steak, not chicken.", sq:"\"Yeah, you kinda shoulda.\" 🦜"}},
+  {g:"C", min:0, color:"#6e6e73",
+   ko:{t:"본전치기", d:"잃진 않았다. 치킨값 정도는 벌었네.", sq:"\"그냥저냥… 살껄 말껄.\" 🦜"},
+   en:{t:"Break-even", d:"Didn't lose. Made about enough for snacks.", sq:"\"Meh. Coulda, shoulda.\" 🦜"}},
+  {g:"D", min:-30, color:"#cc7766",
+   ko:{t:"살짝 물렸다", d:"조금 잃었지만 안 죽었다. 다음엔 더 잘하자.", sq:"\"아 그냥 둘껄 그랬나…\" 🦜"},
+   en:{t:"Bruised", d:"A small loss, but you survived. Next time.", sq:"\"Maybe I shoulda waited…\" 🦜"}},
+  {g:"F", min:-70, color:"#d9483b",
+   ko:{t:"껄무새 등판", d:"아, 그때 팔껄. 손절했어야 했는데.", sq:"\"팔껄… 팔껄… 팔껄…\" 🦜"},
+   en:{t:"Ouch", d:"Shoulda sold. Shoulda cut your losses.", sq:"\"Shoulda sold… shoulda sold…\" 🦜"}},
+  {g:"F", min:-Infinity, color:"#8a1f16", bankrupt:true,
+   ko:{t:"전 재산 증발", d:"빈털터리가 됐다. 다음 생에 힘내자.", sq:"\"이번 생은 글렀어…\" 🦜"},
+   en:{t:"Wiped out", d:"Flat broke. Get 'em next life.", sq:"\"This life is a loss…\" 🦜"}}
+];
+
+/* ===== state ===== */
+let lang = localStorage.getItem('shoulda_lang') || 'ko';
+function seedAmount(){ return lang==='ko' ? 1000000 : 1000; }   // default(1배) 기준 시드
+const SEED_MULTS = [0.1, 0.5, 1, 5, 10];                        // default 대비 배수
+function curSym(){ return lang==='ko' ? '₩' : '$'; }
+let state = { cat:null, item:null, bi:0, si:1, seed:seedAmount(), balance:seedAmount(), round:1, last:null };
+
+function fmtMoney(v){ return curSym() + Math.round(v).toLocaleString(lang==='ko'?'ko-KR':'en-US'); }
+function fmtPrice(p, item){
+  const s = lang==='ko'?item.unit.ko:item.unit.en;
+  const sym = {USD:'$',KRW:'₩',JPY:'¥',GBP:'£',HKD:'HK$',SGD:'S$',AED:'AED '}[item.cur]||'';
+  const num = p>=100 ? Math.round(p).toLocaleString() : (p>=1 ? p.toFixed(2) : p.toPrecision(2));
+  return `${sym}${num} ${s}`;
+}
+function t(k){ return I[lang][k]; }
+function track(name, params){ try{ gtag('event', name, params||{}); }catch(e){} }
+
+/* ===== render ===== */
+const app = document.getElementById('app');
+function render(){
+  if(state.cat===null) return renderHome();
+  if(state.cat==='__pick') return renderCats();
+  if(!state.item) return renderItems();
+  if(state.last==null) return renderTiming();
+  return renderResult();
+}
+
+function renderHome(){
+  const chips = SEED_MULTS.map(m=>{
+    const val = seedAmount()*m;
+    const active = Math.abs(state.seed - val) < 0.5;
+    const isDefault = m===1;
+    return `<button class="seedchip${active?' on':''}" data-seed="${val}">${fmtMoney(val)}${isDefault?` <span class="def">·default</span>`:''}</button>`;
+  }).join('');
+  app.innerHTML = `
+    <section class="step hero">
+      ${parrotSVG()}
+      <p class="eyebrow">OnlyOne</p>
+      <h1>${t('heroTitle')}</h1>
+      <p class="sub">${t('heroSub')}</p>
+      <div class="seedpick">
+        <p class="seedpick-lab">${t('seedPick')}</p>
+        <div class="seedchips">${chips}</div>
+      </div>
+      <div class="row" style="margin-top:20px">
+        <button class="btn btn-primary" id="startBtn">${t('start')}</button>
+      </div>
+    </section>`;
+  app.querySelectorAll('.seedchip').forEach(b=> b.onclick = ()=>{
+    state.seed = +b.dataset.seed; state.balance = state.seed;
+    track('shoulda_seed',{seed:Math.round(state.seed)});
+    renderHome();
+  });
+  document.getElementById('startBtn').onclick = ()=>{
+    state.balance = state.seed;
+    track('shoulda_start',{seed:Math.round(state.seed)});
+    state.cat='__pick'; render();
+  };
+}
+
+function renderCats(){
+  const cards = Object.entries(DATA).map(([k,c])=>`
+    <button class="card" data-cat="${k}">
+      <span class="emoji">${c.emoji}</span>
+      <span class="nm">${c.name[lang]}</span>
+      <span class="meta">${c.items.length}</span>
+    </button>`).join('');
+  app.innerHTML = `
+    <section class="step">
+      <button class="back" id="backHome">← ${t('back')}</button>
+      <h2 class="sectitle">${t('pickCat')}</h2>
+      <p class="secsub">${t('pickCatSub')}</p>
+      <div class="grid">${cards}</div>
+    </section>`;
+  document.getElementById('backHome').onclick = ()=>{ state.cat=null; render(); };
+  app.querySelectorAll('.card').forEach(b=> b.onclick = ()=>{
+    state.cat=b.dataset.cat; track('shoulda_category',{category:state.cat}); render();
+  });
+}
+
+function renderItems(){
+  const c = DATA[state.cat];
+  const list = c.items.map(it=>{
+    return `<button class="item" data-id="${it.id}">
+      <span class="nm">${it.name[lang]}</span>
+      <span class="go">›</span>
+    </button>`;
+  }).join('');
+  app.innerHTML = `
+    <section class="step">
+      <button class="back" id="backCat">← ${t('back')}</button>
+      <div class="crumb"><b>${c.name[lang]}</b></div>
+      <h2 class="sectitle">${t('pickItem')}</h2>
+      <p class="secsub">${t('pickItemSub')}</p>
+      <div class="list">${list}</div>
+    </section>`;
+  document.getElementById('backCat').onclick = ()=>{ state.cat='__pick'; render(); };
+  app.querySelectorAll('.item').forEach(b=> b.onclick = ()=>{
+    state.item = c.items.find(x=>x.id===b.dataset.id);
+    state.bi=0; state.si=state.item.series.length-1; state.last=null;
+    track('shoulda_item',{category:state.cat, item:state.item.id});
+    render();
+  });
+}
+
+function renderTiming(){
+  const c=DATA[state.cat], it=state.item, S=it.series, N=S.length;
+  app.innerHTML = `
+    <section class="step">
+      <button class="back" id="backItem">← ${t('back')}</button>
+      <div class="crumb"><b>${c.name[lang]}</b><span class="sep">›</span><b>${it.name[lang]}</b></div>
+      <h2 class="sectitle">${t('timingTitle')}</h2>
+      <p class="secsub">${t('timingSub')}</p>
+      <div class="panel">
+        <div class="sliderbox">
+          <div class="track"></div><div class="fill" id="fill"></div>
+          <input type="range" class="thumb-buy"  id="buy"  min="0" max="${N-1}" step="1" value="${state.bi}">
+          <input type="range" class="thumb-sell" id="sell" min="0" max="${N-1}" step="1" value="${state.si}">
+        </div>
+        <div class="axis"><span>${S[0][0]}</span><span>${S[N-1][0]}</span></div>
+        <div class="legs">
+          <div class="leg"><div class="lab"><span class="dot" style="background:var(--gain)"></span>${t('buy')}</div>
+            <div class="dt" id="buyDate"></div></div>
+          <div class="leg"><div class="lab"><span class="dot" style="background:var(--loss)"></span>${t('sell')}</div>
+            <div class="dt" id="sellDate"></div></div>
+        </div>
+        <p class="seedline">${t('seed')}: <b>${fmtMoney(state.balance)}</b>${state.round>1?` · ${t('round')} ${state.round}`:''}</p>
+        <div class="row" style="margin-top:6px"><button class="btn btn-primary" id="calcBtn">${t('seeResult')}</button></div>
+      </div>
+      <p class="secsub" style="margin-top:14px; font-size:12.5px">${t('source')}: ${it.source}</p>
+      <p class="secsub" style="font-size:12px">${t('disclaimer')}</p>
+    </section>`;
+  document.getElementById('backItem').onclick = ()=>{ state.item=null; render(); };
+
+  const buy=document.getElementById('buy'), sell=document.getElementById('sell');
+  const sync=()=>{
+    let bi=+buy.value, si=+sell.value;
+    if(bi>si){ if(document.activeElement===buy){ si=bi; sell.value=si; } else { bi=si; buy.value=bi; } }
+    state.bi=bi; state.si=si;
+    const fill=document.getElementById('fill');
+    fill.style.left=(bi/(N-1)*100)+'%'; fill.style.width=((si-bi)/(N-1)*100)+'%';
+    document.getElementById('buyDate').textContent=S[bi][0];
+    document.getElementById('sellDate').textContent=S[si][0];
+  };
+  buy.oninput=sync; sell.oninput=sync; sync();
+  document.getElementById('calcBtn').onclick=()=>{ computeResult(); render(); };
+}
+
+function drawResultChart(it,bi,si){
+  const S=it.series, N=S.length, w=320,h=150, pad=10, padTop=16;
+  const ps=S.map(p=>p[1]), mn=Math.min(...ps), mx=Math.max(...ps);
+  const hiIdx=ps.indexOf(mx), loIdx=ps.indexOf(mn);
+  const X=i=> pad + i/(N-1)*(w-2*pad);
+  const Y=v=> mx===mn? h/2 : (h-pad) - (v-mn)/(mx-mn)*(h-pad-padTop);
+  const line=S.map((p,i)=>`${i?'L':'M'}${X(i).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(' ');
+  // 매수→매도 음영
+  let region='';
+  if(si>bi){
+    let d=`M${X(bi)},${h-pad} `;
+    for(let i=bi;i<=si;i++) d+=`L${X(i).toFixed(1)},${Y(S[i][1]).toFixed(1)} `;
+    d+=`L${X(si)},${h-pad} Z`;
+    const up=S[si][1]>=S[bi][1];
+    region=`<path d="${d}" fill="${up?'rgba(31,143,78,.12)':'rgba(217,72,59,.12)'}"/>`;
+  }
+  const dot=(i,col,rr)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(S[i][1]).toFixed(1)}" r="${rr||5}" fill="#fff" stroke="${col}" stroke-width="3"/>`;
+  // 최고/최저 마커 (작은 다이아몬드)
+  const mark=(i,col)=>{ const cx=X(i), cy=Y(S[i][1]);
+    return `<path d="M${cx},${(cy-6).toFixed(1)} L${(cx+5).toFixed(1)},${cy.toFixed(1)} L${cx},${(cy+6).toFixed(1)} L${(cx-5).toFixed(1)},${cy.toFixed(1)} Z" fill="${col}"/>`; };
+  document.getElementById('resultChart').innerHTML =
+    region
+    + `<path d="${line}" fill="none" stroke="#1d1d1f" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
+    + mark(hiIdx,'#c8a24a') + mark(loIdx,'#6e6e73')
+    + dot(bi,'#1f8f4e') + dot(si,'#d9483b');
+  document.getElementById('hiDate').textContent=S[hiIdx][0];
+  document.getElementById('hiPrice').textContent=fmtPrice(mx,it);
+  document.getElementById('loDate').textContent=S[loIdx][0];
+  document.getElementById('loPrice').textContent=fmtPrice(mn,it);
+}
+
+function computeResult(){
+  const S=state.item.series, bp=S[state.bi][1], sp=S[state.si][1];
+  const mult = bp>0 ? sp/bp : 1, ret=(mult-1)*100;
+  const before=state.balance, after=before*mult;
+  const grade=pickGrade(ret);
+  state.last={ret, before, after, bp, sp, bd:S[state.bi][0], sd:S[state.si][0], grade};
+  state.balance=after;
+  track('shoulda_result',{category:state.cat, item:state.item.id, grade:grade.g, ret:Math.round(ret), bankrupt:!!grade.bankrupt});
+}
+function pickGrade(ret){ for(const g of GRADES){ if(ret>=g.min) return g; } return GRADES[GRADES.length-1]; }
+
+function renderResult(){
+  const r=state.last, g=r.grade, gain=r.ret>=0, it=state.item, c=DATA[state.cat];
+  const retStr=(r.ret>=0?'+':'')+r.ret.toFixed(1)+'%';
+  app.innerHTML = `
+    <section class="step">
+      <div class="result">
+        <div class="gradechip" style="background:${g.color}">${g.g}</div>
+        <p class="rtitle">${g[lang].t}</p>
+        <div class="rnum" style="color:${gain?'var(--gain)':'var(--loss)'}">${retStr}</div>
+        <p class="rbal">${t('finalBal')}: <b>${fmtMoney(r.after)}</b>${state.round>1?` · ${t('round')} ${state.round}`:''}</p>
+        <p class="rdesc">${g[lang].d}</p>
+        <p class="rsquawk">${g[lang].sq}</p>
+        <p class="tag">${c.name[lang]} · ${it.name[lang]} · ${r.bd} → ${r.sd}</p>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <p class="secsub" style="margin:0 0 8px; font-size:13px">${t('priceChart')} · ${it.name[lang]}</p>
+        <svg class="chart" id="resultChart" viewBox="0 0 320 150" preserveAspectRatio="none"></svg>
+        <div class="axis"><span>${it.series[0][0]}</span><span>${it.series[it.series.length-1][0]}</span></div>
+        <div class="legs" style="margin-top:10px">
+          <div class="leg"><div class="lab"><span class="dot" style="background:var(--gain)"></span>${t('buy')}</div>
+            <div class="dt">${r.bd}</div><div class="pr">${fmtPrice(r.bp,it)}</div></div>
+          <div class="leg"><div class="lab"><span class="dot" style="background:var(--loss)"></span>${t('sell')}</div>
+            <div class="dt">${r.sd}</div><div class="pr">${fmtPrice(r.sp,it)}</div></div>
+        </div>
+        <div class="legs" style="margin-top:8px">
+          <div class="leg"><div class="lab"><span class="dot" style="background:var(--gold)"></span>${t('high')}</div>
+            <div class="dt" id="hiDate"></div><div class="pr" id="hiPrice"></div></div>
+          <div class="leg"><div class="lab"><span class="dot" style="background:var(--muted)"></span>${t('low')}</div>
+            <div class="dt" id="loDate"></div><div class="pr" id="loPrice"></div></div>
+        </div>
+        <p class="secsub" style="margin:12px 0 0; font-size:11.5px">${t('source')}: ${it.source}</p>
+      </div>
+      <div class="row" style="margin-top:18px">
+        ${ g.bankrupt
+            ? `<button class="btn btn-primary" id="againBtn">${t('again')}</button>`
+            : (gain
+                ? `<button class="btn btn-primary" id="reinvestBtn">${t('reinvest')}</button>
+                   <button class="btn btn-ghost" id="restartBtn">${t('restart')}</button>`
+                : `<button class="btn btn-primary" id="restartBtn">${t('restart')}</button>`) }
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn btn-ghost" id="saveBtn">${t('save')}</button>
+        <button class="btn btn-ghost" id="shareBtn">${t('share')}</button>
+      </div>
+    </section>`;
+  const reinvest=document.getElementById('reinvestBtn');
+  if(reinvest) reinvest.onclick=()=>{ track('shoulda_reinvest',{round:state.round}); state.round++; state.item=null; state.last=null; state.cat='__pick'; render(); };
+  const again=document.getElementById('againBtn'); if(again) again.onclick=resetAll;
+  const restart=document.getElementById('restartBtn'); if(restart) restart.onclick=resetAll;
+  document.getElementById('saveBtn').onclick=()=>{ track('shoulda_share',{type:'image',grade:g.g}); saveImage(); };
+  document.getElementById('shareBtn').onclick=()=>{ track('shoulda_share',{type:'native',grade:g.g}); shareResult(retStr,g.g); };
+  drawResultChart(it, state.bi, state.si);
+}
+function resetAll(){ state={cat:'__pick', item:null, bi:0, si:1, seed:state.seed, balance:state.seed, round:1, last:null}; render(); }
+
+/* ===== share / save ===== */
+function shareResult(retStr,g){
+  const text=I[lang].shareText(g,retStr), url=location.href;
+  if(navigator.share){ navigator.share({title:t('heroTitle'),text,url}).catch(()=>{}); }
+  else { navigator.clipboard&&navigator.clipboard.writeText(text+' '+url); toast(t('copied')); }
+}
+function saveImage(){
+  const r=state.last, g=r.grade, it=state.item, c=DATA[state.cat];
+  const W=1080,H=1080, cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const x=cv.getContext('2d');
+  x.fillStyle='#f5f5f7'; x.fillRect(0,0,W,H);
+  x.fillStyle='#fff'; roundRect(x,90,150,900,780,40); x.fill();
+  x.strokeStyle='rgba(0,0,0,.08)'; x.lineWidth=2; roundRect(x,90,150,900,780,40); x.stroke();
+  x.fillStyle=g.color; x.beginPath(); x.arc(W/2,330,90,0,7); x.fill();
+  x.fillStyle='#fff'; x.textAlign='center'; x.textBaseline='middle';
+  x.font='700 96px Pretendard, sans-serif'; x.fillText(g.g, W/2, 338);
+  x.fillStyle='#1d1d1f'; x.font='700 46px Pretendard, sans-serif'; x.fillText(g[lang].t, W/2, 470);
+  const retStr=(r.ret>=0?'+':'')+r.ret.toFixed(1)+'%';
+  x.fillStyle=r.ret>=0?'#1f8f4e':'#d9483b'; x.font='800 110px Pretendard, sans-serif'; x.fillText(retStr, W/2, 580);
+  x.fillStyle='#6e6e73'; x.font='400 34px Pretendard, sans-serif'; x.fillText(`${t('finalBal')}: ${fmtMoney(r.after)}`, W/2, 660);
+  x.fillStyle='#1d1d1f'; x.font='600 36px Pretendard, sans-serif'; x.fillText(`${c.name[lang]} · ${it.name[lang]}`, W/2, 730);
+  x.fillStyle='#6e6e73'; x.font='400 30px Pretendard, sans-serif'; x.fillText(`${r.bd} → ${r.sd}`, W/2, 778);
+  x.fillStyle='#1d1d1f'; x.font='400 30px Pretendard, sans-serif'; wrapText(x, g[lang].d, W/2, 838, 760, 40);
+  x.fillStyle='#3a3f47'; x.font='700 38px Pretendard, sans-serif'; x.fillText('🦜 '+t('heroTitle')+'  ·  OnlyOne', W/2, 1000);
+  cv.toBlob(b=>{
+    const file=new File([b],'shoulda.png',{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})) navigator.share({files:[file], title:t('heroTitle')}).catch(()=>download(b));
+    else download(b);
+  },'image/png');
+}
+function download(b){ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='shoulda.png'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); }
+function roundRect(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function wrapText(c,text,cx,y,maxw,lh){ const words=(text+'').split(' '); let line='',yy=y;
+  for(const w of words){ const test=line+w+' '; if(c.measureText(test).width>maxw && line){ c.fillText(line.trim(),cx,yy); line=w+' '; yy+=lh; } else line=test; }
+  c.fillText(line.trim(),cx,yy); }
+function toast(msg){ const d=document.createElement('div'); d.textContent=msg;
+  d.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1d1d1f;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;z-index:80;opacity:0;transition:opacity .2s';
+  document.body.appendChild(d); requestAnimationFrame(()=>d.style.opacity='1'); setTimeout(()=>{d.style.opacity='0'; setTimeout(()=>d.remove(),300);},1600); }
+
+/* ===== parrot mascot ===== */
+function parrotSVG(){ return `
+  <svg class="parrot" viewBox="0 0 100 100" aria-hidden="true">
+    <ellipse cx="50" cy="62" rx="24" ry="28" fill="#3a3f47"/>
+    <circle cx="50" cy="34" r="18" fill="#4a5058"/>
+    <path d="M38 32 q-12 2 -14 12 q10 -4 16 -4 z" fill="#5a616b"/>
+    <circle cx="55" cy="31" r="4.5" fill="#fff"/><circle cx="56" cy="31" r="2.3" fill="#1d1d1f"/>
+    <path d="M64 33 q14 2 12 12 q-9 -6 -14 -7 z" fill="#c8a24a"/>
+    <path d="M44 86 q6 6 12 0" fill="none" stroke="#2b2f36" stroke-width="3" stroke-linecap="round"/>
+  </svg>`; }
+
+/* ===== chrome ===== */
+function applyChrome(){
+  document.documentElement.lang = lang;
+  document.getElementById('langBtn').textContent = t('langBtn');
+  document.getElementById('privacyNote').textContent = t('privacyNote');
+  document.getElementById('openPrivacy').textContent = t('privacyLink');
+  document.getElementById('tagline').textContent = t('tagline');
+  document.getElementById('consentText').textContent = t('consentText');
+  document.getElementById('acceptBtn').textContent = t('accept');
+  document.getElementById('declineBtn').textContent = t('decline');
+  document.getElementById('pmTitle').textContent = t('pmTitle');
+  document.getElementById('pmBody').textContent = t('pmBody');
+}
+document.getElementById('langBtn').onclick = ()=>{
+  const base = seedAmount();
+  const balRatio = state.balance / base;
+  const seedRatio = state.seed / base;
+  lang = lang==='ko' ? 'en' : 'ko';
+  localStorage.setItem('shoulda_lang', lang);
+  state.balance = seedAmount()*balRatio;
+  state.seed = seedAmount()*seedRatio;
+  track('lang_change',{lang});
+  applyChrome(); render();
+};
+document.getElementById('brandLink').onclick = ()=> track('onlyone_click',{from:'shoulda'});
+
+/* consent */
+const consent=document.getElementById('consent');
+function setConsent(granted){
+  gtag('consent','update',{ ad_storage:'denied', ad_user_data:'denied', ad_personalization:'denied', analytics_storage: granted?'granted':'denied' });
+  localStorage.setItem('shoulda_consent', granted?'1':'0');
+  consent.classList.remove('show');
+}
+document.getElementById('acceptBtn').onclick=()=>setConsent(true);
+document.getElementById('declineBtn').onclick=()=>setConsent(false);
+(function(){ const c=localStorage.getItem('shoulda_consent');
+  if(c==='1') setConsent(true); else if(c==='0') setConsent(false); else consent.classList.add('show'); })();
+
+/* privacy modal */
+const pm=document.getElementById('privacyModal');
+document.getElementById('openPrivacy').onclick=()=>pm.classList.add('show');
+document.getElementById('closePrivacy').onclick=()=>pm.classList.remove('show');
+pm.onclick=e=>{ if(e.target===pm) pm.classList.remove('show'); };
+
+/* boot */
+applyChrome();
+render();
+</script>
+</body>
+</html>
